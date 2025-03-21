@@ -101,3 +101,23 @@ h1, h2, h3 {
     font-size: 14px;
   }
 }
+.heart {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: red;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 50% 80%, 18% 100%, 0% 38%);
+  animation: float 1s linear infinite, fadeOut 1s forwards;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.2); }
+  100% { transform: translateY(-20px) scale(1); }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
