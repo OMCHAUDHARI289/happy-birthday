@@ -18,11 +18,11 @@ const CakeCutting = () => {
 
   // Define candles with more detail
   const candles = [
-    { id: 1, top: '80px', left: '70%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
-    { id: 2, top: '80px', left: '85%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
-    { id: 3, top: '80px', left: '100%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
-    { id: 4, top: '80px', left: '115%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
-    { id: 5, top: '80px', left: '130%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
+    { id: 1, top: '30px', left: '-430%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
+    { id: 2, top: '30px', left: '-415%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
+    { id: 3, top: '30px', left: '-400%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
+    { id: 4, top: '30px', left: '-385%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
+    { id: 5, top: '30px', left: '-370%', size: '10px', height: '40px', color: '#ffcc00', blown: false },
   ];
 
   // State to track blown candles
@@ -185,6 +185,57 @@ const CakeCutting = () => {
     setIsSlicing(false);
   };
 
+  // Add touch support for mobile devices
+  const handleTouchStart = (e) => {
+    if (candlesBlown && !cakeCut && !sliceAnimating) {
+      setIsSlicing(true);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touch = e.touches[0];
+      const position = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+      setSlicePosition(position);
+      setSlicePath([position]);
+    }
+  };
+  
+  const handleTouchMove = (e) => {
+    if (isSlicing && !sliceComplete && !sliceAnimating) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touch = e.touches[0];
+      const currentPosition = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+      
+      // Add point to slice path
+      setSlicePath(prev => [...prev, currentPosition]);
+      
+      // If slice moved down enough, start slice animation
+      if (currentPosition.y > slicePosition.y + 80) {
+        setSliceComplete(true);
+        setSliceAnimating(true);
+        
+        // Animate the slice
+        let progress = 0;
+        const sliceInterval = setInterval(() => {
+          progress += 5;
+          setSliceProgress(progress);
+          
+          if (progress >= 100) {
+            clearInterval(sliceInterval);
+            handleCakeCut();
+          }
+        }, 50);
+      }
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    setIsSlicing(false);
+  };
+
   const goToNextPage = () => {
     navigate('/greeting');
   };
@@ -232,68 +283,83 @@ const CakeCutting = () => {
         sessionStorage.setItem('previousSong', globalPlayer.src);
         sessionStorage.setItem('globalMusicWasPlaying', 'true');
         
-        // Pause the global music
+        // Switch to romantic song (index 0) if not already playing it
+        const musicPlayerDiv = document.querySelector('.music-player');
+        if (musicPlayerDiv && sessionStorage.getItem('currentSongIndex') !== '0') {
+          // Find the previous button and click it to switch to the romantic song
+          const prevButton = musicPlayerDiv.querySelector('button:nth-child(1)');
+          if (prevButton) {
+            prevButton.click();
+          }
+        }
+      }
+    }, 500);
+  }, []);
+
+  // Pause romantic music and play birthday song when candles are blown out
+  useEffect(() => {
+    if (candlesBlown) {
+      // Pause the romantic song
+      const globalPlayer = document.querySelector('.music-player audio');
+      if (globalPlayer && !globalPlayer.paused) {
         const musicPlayerButton = document.querySelector('.music-player button');
         if (musicPlayerButton) {
           musicPlayerButton.click();
         }
       }
       
-      // Play the birthday song
-      setMusicPlaying(true);
-      const birthdaySongButton = document.querySelector('.music-controls button');
-      if (birthdaySongButton) {
-        birthdaySongButton.click();
-      }
-      
-      // Hide the global music player controls temporarily
-      const musicPlayerDiv = document.querySelector('.music-player');
-      if (musicPlayerDiv) {
-        musicPlayerDiv.style.display = 'none';
-      }
-    }, 1000);
-  }, []);
-
-  // Resume original music when leaving this page
-  useEffect(() => {
-    return () => {
-      // Show the music player again
-      const musicPlayerDiv = document.querySelector('.music-player');
-      if (musicPlayerDiv) {
-        musicPlayerDiv.style.display = 'block';
-      }
-      
-      // Resume the previous song if it was playing
-      if (sessionStorage.getItem('globalMusicWasPlaying') === 'true') {
-        setTimeout(() => {
-          const musicPlayerButton = document.querySelector('.music-player button');
-          if (musicPlayerButton) {
-            musicPlayerButton.click();
+      // Switch to birthday song (index 1)
+      setTimeout(() => {
+        // Find the next button and click it to switch to the birthday song
+        const musicPlayerDiv = document.querySelector('.music-player');
+        if (musicPlayerDiv) {
+          const nextButton = musicPlayerDiv.querySelector('button:nth-child(3)');
+          if (nextButton) {
+            nextButton.click();
           }
-        }, 500);
-      }
-    };
-  }, []);
-  
+          
+          // Play the birthday song
+          setTimeout(() => {
+            const playButton = musicPlayerDiv.querySelector('button');
+            if (playButton) {
+              playButton.click();
+            }
+          }, 500);
+        }
+      }, 1000);
+    }
+  }, [candlesBlown]);
+
   // Resume romantic music after cake is cut
   useEffect(() => {
     if (cakeCut) {
       // Pause birthday song
       setMusicPlaying(false);
+      const globalPlayer = document.querySelector('.music-player audio');
+      if (globalPlayer && !globalPlayer.paused) {
+        const musicPlayerButton = document.querySelector('.music-player button');
+        if (musicPlayerButton) {
+          musicPlayerButton.click();
+        }
+      }
       
-      // After a small delay, show and resume the global music player
+      // After a small delay, switch back to romantic song and resume it
       setTimeout(() => {
         const musicPlayerDiv = document.querySelector('.music-player');
         if (musicPlayerDiv) {
-          musicPlayerDiv.style.display = 'block';
-        }
-        
-        // Resume the previous romantic song
-        if (sessionStorage.getItem('globalMusicWasPlaying') === 'true') {
-          const musicPlayerButton = document.querySelector('.music-player button');
-          if (musicPlayerButton) {
-            musicPlayerButton.click();
+          // Find the previous button and click it to switch to the romantic song
+          const prevButton = musicPlayerDiv.querySelector('button:nth-child(1)');
+          if (prevButton) {
+            prevButton.click();
           }
+          
+          // Play the romantic song
+          setTimeout(() => {
+            const playButton = musicPlayerDiv.querySelector('button');
+            if (playButton) {
+              playButton.click();
+            }
+          }, 500);
         }
       }, 2000); // Wait for 2 seconds after cake is cut
     }
@@ -457,6 +523,9 @@ const CakeCutting = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Cake plate */}
             <motion.div

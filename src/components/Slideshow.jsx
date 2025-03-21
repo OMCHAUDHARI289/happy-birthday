@@ -1,41 +1,105 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import memory1 from '../assets/images/First.jpg';
+import memory2 from '../assets/images/Second.jpg'; 
+import memory3 from '../assets/images/Third.jpg';
+import memory4 from '../assets/images/Fourth.jpg';
+// Images are now directly accessed from the public directory
 
 const Slideshow = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState({});
+  const [dragStart, setDragStart] = useState(0);
+  const [dragEnd, setDragEnd] = useState(0);
+  const [imageErrors, setImageErrors] = useState({});
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [showHeartCursor, setShowHeartCursor] = useState(false);
 
-  // CUSTOMIZE: Replace these sample memories with your own images and captions
-  // You can:
-  // 1. Add your images to the src/assets folder
-  // 2. Import them like: import image1 from '../assets/your-image.jpg'
-  // 3. Use them here like: { id: 1, src: image1, alt: 'Description', caption: 'Your caption' }
-  // OR use external image URLs like the placeholders below
+  // Function to track mouse movement for custom cursor
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setCursorPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseEnter = () => {
+      setShowHeartCursor(true);
+    };
+
+    const handleMouseLeave = () => {
+      setShowHeartCursor(false);
+    };
+
+    const container = document.querySelector('.pink-gradient-bg');
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+      container.addEventListener('mouseenter', handleMouseEnter);
+      container.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  // Function to handle image loading
+  const handleImageLoad = (id) => {
+    setImagesLoaded(prev => ({
+      ...prev,
+      [id]: true
+    }));
+  };
+
+  // Function to handle image loading errors
+  const handleImageError = (id) => {
+    console.log(`Error loading image ${id}`);
+    setImageErrors(prev => ({
+      ...prev,
+      [id]: true
+    }));
+  };
+
+  // Generate fallback image for errors
+  const getFallbackImage = (id) => {
+    const colors = ['#ffb6c1', '#ffd700', '#98fb98', '#87cefa'];
+    const color = colors[(id - 1) % colors.length];
+    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="600" height="400" fill="${color}"/><text x="50%" y="50%" font-family="Arial" font-size="36" fill="white" text-anchor="middle">Memory ${id}</text></svg>`;
+  };
+
+  // Using direct paths to the images in public folder
   const memories = [
     { 
       id: 1, 
-      src: 'https://via.placeholder.com/600x400/ffb6c1/ffffff?text=Memory+1', 
-      alt: 'Memory 1',
+      src: '/images/First.jpg', 
+      fallbackSrc: getFallbackImage(1),
+      alt: 'Memory1',
       caption: 'That time we stayed up all night just talking and watching the sunrise. I\'ve never laughed so hard in my life!'
     },
     { 
       id: 2, 
-      src: 'https://via.placeholder.com/600x400/ffb6c1/ffffff?text=Memory+2', 
-      alt: 'Memory 2',
+      src: '/images/Second.jpg',
+      fallbackSrc: getFallbackImage(2),
+      alt: 'Memory2',
       caption: 'Our first road trip together. The car broke down but we still had the best time!'
     },
     { 
       id: 3, 
-      src: 'https://via.placeholder.com/600x400/ffb6c1/ffffff?text=Memory+3', 
-      alt: 'Memory 3',
+      src: '/images/Third.jpg',
+      fallbackSrc: getFallbackImage(3),
+      alt: 'Memory3',
       caption: 'Your birthday last year when we went dancing until 3am. You were glowing with happiness.'
     },
     { 
       id: 4, 
-      src: 'https://via.placeholder.com/600x400/ffb6c1/ffffff?text=Memory+4', 
-      alt: 'Memory 4',
+      src: '/images/Fourth.jpg',
+      fallbackSrc: getFallbackImage(4),
+      alt: 'Memory4',
       caption: 'The day we cooked together and almost burned down the kitchen, but the pasta was still somehow amazing!'
     },
   ];
@@ -56,6 +120,69 @@ const Slideshow = () => {
     navigate('/');
   };
 
+  // Preload all images
+  useEffect(() => {
+    // Create new image objects to preload
+    memories.forEach(memory => {
+      const img = new Image();
+      img.src = memory.src;
+      img.onload = () => handleImageLoad(memory.id);
+      img.onerror = () => {
+        handleImageError(memory.id);
+        // Try loading the fallback
+        const fallbackImg = new Image();
+        fallbackImg.src = memory.fallbackSrc;
+        fallbackImg.onload = () => handleImageLoad(memory.id);
+      };
+    });
+  }, []);
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    let slideInterval;
+    
+    if (!isPaused) {
+      slideInterval = setInterval(() => {
+        setCurrentSlide((prev) => (prev === memories.length - 1 ? 0 : prev + 1));
+      }, 4000); // Change slide every 4 seconds
+    }
+    
+    return () => {
+      if (slideInterval) {
+        clearInterval(slideInterval);
+      }
+    };
+  }, [isPaused, memories.length]);
+
+  // Function to handle drag/swipe gestures
+  const handleDragStart = (e) => {
+    if (e.type === 'touchstart') {
+      setDragStart(e.touches[0].clientX);
+    } else {
+      setDragStart(e.clientX);
+    }
+  };
+
+  const handleDragEnd = (e) => {
+    if (e.type === 'touchend') {
+      setDragEnd(e.changedTouches[0].clientX);
+    } else {
+      setDragEnd(e.clientX);
+    }
+    
+    // If drag distance is significant, change slide
+    const dragDistance = dragEnd - dragStart;
+    if (Math.abs(dragDistance) > 50) { // Minimum drag distance to register
+      if (dragDistance > 0) {
+        // Dragged right - go to previous slide
+        prevSlide();
+      } else {
+        // Dragged left - go to next slide
+        nextSlide();
+      }
+    }
+  };
+
   const slideVariants = {
     enter: (direction) => ({
       x: direction > 0 ? 1000 : -1000,
@@ -73,6 +200,35 @@ const Slideshow = () => {
 
   return (
     <div className="container pink-gradient-bg">
+      {showHeartCursor && (
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0.5 }}
+          animate={{ 
+            scale: [0.8, 1, 0.8], 
+            opacity: [0.7, 1, 0.7], 
+            rotate: [0, 10, 0, -10, 0]
+          }}
+          transition={{ 
+            duration: 2, 
+            repeat: Infinity,
+            ease: "easeInOut" 
+          }}
+          style={{
+            position: 'fixed',
+            left: cursorPosition.x - 15,
+            top: cursorPosition.y - 15,
+            pointerEvents: 'none',
+            zIndex: 9999,
+            width: '30px',
+            height: '30px',
+            color: '#ff3385',
+            fontSize: '30px',
+            userSelect: 'none'
+          }}
+        >
+          ❤️
+        </motion.div>
+      )}
       <motion.div 
         className="slideshow-container"
         initial={{ opacity: 0 }}
@@ -124,6 +280,10 @@ const Slideshow = () => {
             display: 'flex',
             flexDirection: 'column'
           }}
+          onMouseDown={handleDragStart}
+          onMouseUp={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchEnd={handleDragEnd}
         >
           <AnimatePresence initial={false} custom={currentSlide}>
             <motion.div
@@ -153,14 +313,48 @@ const Slideshow = () => {
                 }}
               >
                 <img
-                  src={memories[currentSlide].src}
+                  src={imageErrors[memories[currentSlide].id] ? memories[currentSlide].fallbackSrc : memories[currentSlide].src}
                   alt={memories[currentSlide].alt}
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover'
+                    objectFit: 'cover',
+                    opacity: imagesLoaded[memories[currentSlide].id] ? 1 : 0,
+                    transition: 'opacity 0.5s ease'
                   }}
+                  onLoad={() => handleImageLoad(memories[currentSlide].id)}
+                  onError={() => handleImageError(memories[currentSlide].id)}
                 />
+                
+                {!imagesLoaded[memories[currentSlide].id] && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      background: 'rgba(255, 204, 224, 0.5)'
+                    }}
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        border: '4px solid white',
+                        borderTopColor: '#ff3385',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div
                   style={{
                     position: 'absolute',
@@ -282,7 +476,7 @@ const Slideshow = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          {memories.map((_, index) => (
+          {memories.map((memory, index) => (
             <motion.div
               key={index}
               onClick={() => setCurrentSlide(index)}
@@ -293,11 +487,42 @@ const Slideshow = () => {
                 backgroundColor: currentSlide === index ? '#ff3385' : 'rgba(255, 255, 255, 0.7)',
                 margin: '0 5px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
+                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                position: 'relative'
               }}
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
-            />
+            >
+              {/* Thumbnail preview on hover */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: -10 }}
+                whileHover={{ opacity: 1, scale: 1, y: -50 }}
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '60px',
+                  height: '40px',
+                  borderRadius: '5px',
+                  overflow: 'hidden',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.2)',
+                  zIndex: 10,
+                  border: '2px solid white'
+                }}
+              >
+                <img
+                  src={imageErrors[memory.id] ? memory.fallbackSrc : memory.src}
+                  alt={`Thumbnail ${index + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                  onError={() => handleImageError(memory.id)}
+                />
+              </motion.div>
+            </motion.div>
           ))}
         </motion.div>
       </motion.div>

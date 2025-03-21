@@ -16,9 +16,13 @@ const MusicPlayer = () => {
   // Array of songs to play with fallback URLs
   const songs = [
     { 
+      title: "Romantic Song", 
+      url: "/music/Song.mp3",
+      artist: "Love Melody"
+    },
+    { 
       title: "Birthday Song", 
-      url: "/birthday-song.mp3",
-      fallbackUrl: "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3",
+      url: "/music/song1.mp3",
       artist: "Birthday Artist"
     },
     // Add more songs here as needed
@@ -39,25 +43,13 @@ const MusicPlayer = () => {
       
       const handleCanPlay = () => {
         setIsLoading(false);
-        // Try to play automatically
-        if (isPlaying) {
-          audioRef.current.play().catch(error => {
-            console.log("Autoplay prevented:", error);
-            setIsPlaying(false);
-          });
-        }
+        // Do not try to autoplay
       };
       
       const handleError = (error) => {
         console.error("Audio error:", error);
         setLoadError(true);
         setIsLoading(false);
-        
-        // Try fallback URL
-        if (currentSong.fallbackUrl && audioRef.current.src !== currentSong.fallbackUrl) {
-          console.log("Trying fallback URL:", currentSong.fallbackUrl);
-          audioRef.current.src = currentSong.fallbackUrl;
-        }
       };
       
       audioRef.current.addEventListener('loadstart', handleLoadStart);
@@ -90,26 +82,15 @@ const MusicPlayer = () => {
     if (audioRef.current) {
       setIsLoading(true);
       
-      // Try loading from relative URL first
+      // Store current song index in sessionStorage
+      sessionStorage.setItem('currentSongIndex', currentSongIndex.toString());
+      
+      // Set source to the song URL
       audioRef.current.src = currentSong.url;
       
-      // Add a timeout to try fallback if loading takes too long
-      const timeoutId = setTimeout(() => {
-        if (isLoading && !loadError) {
-          console.log("Loading taking too long, trying fallback URL");
-          if (currentSong.fallbackUrl && audioRef.current.src !== currentSong.fallbackUrl) {
-            audioRef.current.src = currentSong.fallbackUrl;
-          }
-        }
-      }, 3000);
+      // Do not automatically play the song
       
-      if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.log("Play error:", error);
-        });
-      }
-      
-      return () => clearTimeout(timeoutId);
+      return () => {};
     }
   }, [currentSongIndex, currentSong.url]);
 
@@ -139,15 +120,21 @@ const MusicPlayer = () => {
   };
 
   const playNextSong = () => {
-    setCurrentSongIndex((prevIndex) => 
-      prevIndex === songs.length - 1 ? 0 : prevIndex + 1
-    );
+    setCurrentSongIndex((prevIndex) => {
+      const newIndex = prevIndex === songs.length - 1 ? 0 : prevIndex + 1;
+      // Store current song index in sessionStorage
+      sessionStorage.setItem('currentSongIndex', newIndex.toString());
+      return newIndex;
+    });
   };
 
   const playPreviousSong = () => {
-    setCurrentSongIndex((prevIndex) => 
-      prevIndex === 0 ? songs.length - 1 : prevIndex - 1
-    );
+    setCurrentSongIndex((prevIndex) => {
+      const newIndex = prevIndex === 0 ? songs.length - 1 : prevIndex - 1;
+      // Store current song index in sessionStorage
+      sessionStorage.setItem('currentSongIndex', newIndex.toString());
+      return newIndex;
+    });
   };
   
   // Format time to MM:SS

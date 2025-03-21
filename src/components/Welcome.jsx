@@ -43,6 +43,33 @@ const Welcome = ({ onStart }) => {
     };
   }, []);
 
+  // Ensure romantic music is playing on this page
+  useEffect(() => {
+    // Make sure romantic music (index 0) is playing
+    const musicPlayerDiv = document.querySelector('.music-player');
+    if (musicPlayerDiv) {
+      // Check if we need to switch to the romantic song
+      if (sessionStorage.getItem('currentSongIndex') !== '0') {
+        // Find the previous button and click it to switch to the romantic song
+        const prevButton = musicPlayerDiv.querySelector('button:nth-child(1)');
+        if (prevButton) {
+          prevButton.click();
+        }
+      }
+      
+      // Play the music if it's not already playing
+      setTimeout(() => {
+        const globalPlayer = document.querySelector('.music-player audio');
+        if (globalPlayer && globalPlayer.paused) {
+          const playButton = musicPlayerDiv.querySelector('button');
+          if (playButton) {
+            playButton.click();
+          }
+        }
+      }, 800);
+    }
+  }, []);
+
   // Countdown timer
   useEffect(() => {
     // Set birthday for tomorrow
@@ -250,7 +277,7 @@ const Welcome = ({ onStart }) => {
               transform: "translateZ(50px)"
             }}
           >
-            Happy Birthday, My Bestie! 
+            Happy Birthday, My Baby! 
           </motion.h1>
           
           <motion.div 

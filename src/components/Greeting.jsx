@@ -24,6 +24,19 @@ Your Bestie ❤️`;
 
   // Set up confetti and floating heart effects
   useEffect(() => {
+    // Pause any playing music when greeting page loads
+    const globalPlayer = document.querySelector('.music-player audio');
+    if (globalPlayer && !globalPlayer.paused) {
+      // Store that music was playing
+      sessionStorage.setItem('globalMusicWasPlaying', 'true');
+      
+      // Pause the music
+      const musicPlayerButton = document.querySelector('.music-player button');
+      if (musicPlayerButton) {
+        musicPlayerButton.click();
+      }
+    }
+    
     // Confetti settings
     const confettiSettings = {
       target: 'greeting-confetti',
@@ -76,6 +89,33 @@ Your Bestie ❤️`;
       clearInterval(interval);
       clearTimeout(timeout);
       window.removeEventListener('resize', handleResize);
+      
+      // Resume romantic music (index 0) when leaving the greeting page
+      setTimeout(() => {
+        // Set song index to romantic song (0)
+        if (sessionStorage.getItem('currentSongIndex') !== '0') {
+          const musicPlayerDiv = document.querySelector('.music-player');
+          if (musicPlayerDiv) {
+            // Find the previous button and click it to switch to the romantic song
+            const prevButton = musicPlayerDiv.querySelector('button:nth-child(1)');
+            if (prevButton) {
+              prevButton.click();
+            }
+          }
+        }
+        
+        // Resume the romantic song if it was playing before
+        if (sessionStorage.getItem('globalMusicWasPlaying') === 'true') {
+          setTimeout(() => {
+            const musicPlayerButton = document.querySelector('.music-player button');
+            if (musicPlayerButton) {
+              musicPlayerButton.click();
+            }
+            // Clear the flag
+            sessionStorage.removeItem('globalMusicWasPlaying');
+          }, 500);
+        }
+      }, 1000);
     };
   }, [hearts.length]);
 

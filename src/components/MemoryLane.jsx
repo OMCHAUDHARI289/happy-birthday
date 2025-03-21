@@ -6,17 +6,12 @@ import ConfettiGenerator from 'confetti-js';
 const MemoryLane = () => {
   const navigate = useNavigate();
   
-  // Sample memory images - REPLACE THESE WITH YOUR OWN IMAGES
-  // You can:
-  // 1. Add your images to the src/assets folder
-  // 2. Import them like: import image1 from '../assets/your-image.jpg'
-  // 3. Use them in the memories array like: { id: 1, src: image1, alt: 'Description', caption: 'Your caption' }
-  // OR you can use external image URLs like the placeholders below
+  // Updated memory images to use public directory paths
   const memories = [
-    { id: 1, src: 'https://via.placeholder.com/300x200/ffb6c1/ffffff?text=Memory+1', alt: 'Memory 1' },
-    { id: 2, src: 'https://via.placeholder.com/300x200/ffb6c1/ffffff?text=Memory+2', alt: 'Memory 2' },
-    { id: 3, src: 'https://via.placeholder.com/300x200/ffb6c1/ffffff?text=Memory+3', alt: 'Memory 3' },
-    { id: 4, src: 'https://via.placeholder.com/300x200/ffb6c1/ffffff?text=Memory+4', alt: 'Memory 4' },
+    { id: 1, src: "/images/First.jpg", alt: "Memory 1" },
+    { id: 2, src: "/images/Second.jpg", alt: "Memory 2" },
+    { id: 3, src: "/images/Third.jpg", alt: "Memory 3" },
+    { id: 4, src: "/images/Fourth.jpg", alt: "Memory 4" },
   ];
 
   // Set up confetti and balloon effects
