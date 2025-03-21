@@ -79,28 +79,28 @@ const Slideshow = () => {
       src: '/images/First.jpg', 
       fallbackSrc: getFallbackImage(1),
       alt: 'Memory1',
-      caption: 'That time we stayed up all night just talking and watching the sunrise. I\'ve never laughed so hard in my life!'
+      caption: 'Our first date at 29 july,2023 time = 1.30 pm making my day special' 
     },
     { 
       id: 2, 
       src: '/images/Second.jpg',
       fallbackSrc: getFallbackImage(2),
       alt: 'Memory2',
-      caption: 'Our first road trip together. The car broke down but we still had the best time!'
+      caption: 'thanks for making my birthday special by giving me a surprise party'
     },
     { 
       id: 3, 
       src: '/images/Third.jpg',
       fallbackSrc: getFallbackImage(3),
       alt: 'Memory3',
-      caption: 'Your birthday last year when we went dancing until 3am. You were glowing with happiness.'
+      caption: 'another date where we make our day special '
     },
     { 
       id: 4, 
       src: '/images/Fourth.jpg',
       fallbackSrc: getFallbackImage(4),
       alt: 'Memory4',
-      caption: 'The day we cooked together and almost burned down the kitchen, but the pasta was still somehow amazing!'
+      caption: 'first birthday celebration with your birthday'
     },
   ];
 
