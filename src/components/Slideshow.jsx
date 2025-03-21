@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import memory1 from '../assets/images/First.jpg';
-import memory2 from '../assets/images/Second.jpg'; 
-import memory3 from '../assets/images/Third.jpg';
-import memory4 from '../assets/images/Fourth.jpg';
-// Images are now directly accessed from the public directory
 
 const Slideshow = () => {
   const navigate = useNavigate();
@@ -309,7 +304,13 @@ const Slideshow = () => {
                 style={{
                   position: 'relative',
                   flex: '1',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: '#f5f5f5'
                 }}
               >
                 <img
@@ -318,7 +319,7 @@ const Slideshow = () => {
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
+                    objectFit: 'contain', // Changed from 'cover' to 'contain'
                     opacity: imagesLoaded[memories[currentSlide].id] ? 1 : 0,
                     transition: 'opacity 0.5s ease'
                   }}
@@ -364,7 +365,8 @@ const Slideshow = () => {
                     padding: '20px',
                     background: 'linear-gradient(transparent, rgba(255, 113, 168, 0.9))',
                     color: 'white',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    zIndex: 5
                   }}
                 >
                   <p style={{ fontSize: '16px', fontWeight: '500' }}>{memories[currentSlide].caption}</p>
@@ -530,4 +532,4 @@ const Slideshow = () => {
   );
 };
 
-export default Slideshow; 
+export default Slideshow;
